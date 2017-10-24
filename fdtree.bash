@@ -27,7 +27,11 @@
 # Written by Mark K. Seager (seager@llnl.gov, 925-423-3141) and
 #            Bill Loewe (wel@llnl.gov, 925-422-5587)
 #
-usage="fdtree.bash [-C] [-D] [-R] [-l level_depth] [-d dirs_per_level]
+# Date: 24/10/2017
+# Modified by Victor D. Garcia P. (victor.garcia@carvajal.com)
+# Add H option
+
+usage="fdtree.bash [-C] [-D] [-R] [-H] [-l level_depth] [-d dirs_per_level]
             [-f files_per_dir] [-s size_of_files (in file system blocks)]
             [-o pathname]"
 #
@@ -171,6 +175,8 @@ function create_files
     local base_name
     local dir_name
     local file_name
+# Add Management hidden files while is writing.
+    local hidden_file_name
 
     if [ $DEBUG -gt 0 ]
     then
@@ -188,11 +194,23 @@ function create_files
     nf=$files_per_dir
     while [ $nf -gt 0 ] ; do
 	file_name=$base_name"L"$nl"F"$nf
+# Hidden file name, while is writing.
+	hidden_file_name=$base_name".L"$nl"F"$nf
 	if [ $DEBUG -gt 0 ]
 	then
 	    echo -e "\tcreating file("$nf,$file_name")"
 	fi
-	dd if=/dev/zero bs=4096 count=$fsize of=$file_name > /dev/null 2>&1
+
+# Creating the Hidden file first
+	if [ $HIDDEN_FILE -gt 0 ]
+	then
+		dd if=/dev/zero bs=4096 count=$fsize of=$hidden_file_name > /dev/null 2>&1
+		# The file is rename when is completed.
+		mv $hidden_file_name $file_name		
+	else
+		dd if=/dev/zero bs=4096 count=$fsize of=$file_name > /dev/null 2>&1
+	fi	
+	
 	let nf=$(($nf-1))
     done
 
@@ -269,9 +287,10 @@ declare -i fsize=10		# size of files in file system blocks (4096B)
 declare -i DEBUG=0		# DEBUG FLAG.  Default is off
 declare -i CREATE_TREE=0	# Create tree flag
 declare -i REMOVE_TREE=0	# Remove tree flag
+declare -i HIDDEN_FILE=0	# Hidden Files flag
 OPTIND=0			# initialize to 0 before getopts call
 
-while getopts ":l:d:f:s:o:CDR" opt; do
+while getopts ":l:d:f:s:o:CDRH" opt; do
     case $opt in
 	l ) levels=$OPTARG ;;
 	d ) dirs_per_level=$OPTARG ;;
@@ -281,12 +300,14 @@ while getopts ":l:d:f:s:o:CDR" opt; do
 	C ) CREATE_TREE=1 ;;
 	D ) DEBUG=1 ;;
 	R ) REMOVE_TREE=1 ;;
+	H ) HIDDEN_FILE=1 ;;
 	\? ) IFS=''
 	     echo $usage
 	     IFS='\ \t\n'
 	     echo -e "\t-C create tree only"
 	     echo -e "\t-D turns on debugging"
 	     echo -e "\t-R remove tree only"
+	     echo -e "\t-H write the file like a hidden file while the file is writing"	
 	     echo -e "\t-l is the number of recursive levels below the root node"
 	     echo -e "\t-d is the number of directories to create per level"
 	     echo -e "\t-f is the number of files to create per directory"

@@ -28,12 +28,13 @@ Written by Mark K. Seager (seager@llnl.gov, 925-423-3141) and
 
 ********************************************************************************
 
-fdtree.bash [-C] [-D] [-R] [-l level_depth] [-d dirs_per_level]
+fdtree.bash [-C] [-D] [-R] [-H] [-l level_depth] [-d dirs_per_level]
 	    [-f files_per_dir] [-s size_of_files (in file system blocks)]
 	    [-o pathname]
 	    -C create structure only
 	    -D turns on debugging
 	    -R remove structure only
+		-H creation of files first with hidden name. 
 	    -l is the number of recursive levels below LEVEL0
 	    -d is the number of directories to create per level
 	    -f is the number of files to create per directory
